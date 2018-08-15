@@ -132,7 +132,7 @@ const moduleChoiceList = {
       disableButton ({commit}, buttonIndex) {
         commit('disableButton', buttonIndex)
       },
-      setPlayerChoice ({commit}, playerChoiceValue){
+      setPlayerChoice ({commit}, playerChoiceValue) {
         commit('setPlayerChoice', playerChoiceValue)
       }
   }

@@ -6,6 +6,7 @@ import App from './App'
 import router from './router'
 import VueLocalStorage from 'vue-localstorage'
 import store from './store'
+import VModal from 'vue-js-modal'
 // import SocketIO from 'socket.io'
 // import VueSocketIO from 'vue-socket.io'
 
@@ -15,7 +16,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 
 Vue.use(BootstrapVue)
 Vue.use(VueLocalStorage)
-// Vue.use(VueSocketIO, SocketInstance)
+Vue.use(VModal, { dialog: true })
 
 Vue.config.productionTip = false
 Vue.prototype.$hostname = (Vue.config.productionTip) ? 'https://www.your-api.com' : 'http://localhost:3000'

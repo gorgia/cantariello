@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
     <b-navbar toggleable="md" type="dark">
       <b-nav-item to="/">Home</b-nav-item>
       <b-nav-item to="/login" v-if=!getIsLoggedIn>Login</b-nav-item>

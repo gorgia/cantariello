@@ -1,6 +1,7 @@
 <template>
   <div>
     <img src="../assets/cantariello.gif">
+    <img src="../assets/logo.png">
   </div>
 </template>
 
