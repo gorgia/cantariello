@@ -18,8 +18,8 @@ router.get('/usersconnected', function (req, res) {
 })
 
 router.get('/randomlist', function (req, res) {
-    let list = myCache.get('choiceList')
-    if (!list) {
+    if (myCache.get('choiceList')) res.json(myCache.get('choiceList'))
+    else {
       let response = randomListGenerator.getListPromise(5)
       response
         .then(
@@ -28,15 +28,14 @@ router.get('/randomlist', function (req, res) {
             let randomList = response.data.query.random
             let list = correctList(randomList)
             myCache.set('choiceList', list)
-            console.log('Expected Response:\n' + res.toString())
+            console.log(`Returning list value:\n${list}`)
+            res.json(list)
           }
         )
         .catch(function (error) {
           console.log(error)
         })
     }
-  console.log(list)
-  res = res.json(list)
 })
 
 function correctList (randomList) {
