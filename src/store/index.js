@@ -37,6 +37,7 @@ const moduleLogin = {
       if (localStorage.getItem('token')) {
         state.isLoggedIn = localStorage.getItem('token')
         state.userName = localStorage.getItem('userName')
+        state.user = localStorage.getItem('user')
       }
     }
   },
@@ -48,11 +49,14 @@ const moduleLogin = {
           }, creds) {
       console.log('login...', creds)
       commit(LOGIN) // show spinner
+      const user = creds.user
+      const userName = creds.user.username
       return new Promise(resolve => {
         setTimeout(() => {
+          console.log(`${user.username} user in login action\n${user}`)
           localStorage.setItem('token', 'JWT')
           localStorage.setItem('userName', creds.user.username)
-          localStorage.setItem('user', creds.user)
+          localStorage.setItem('user', JSON.stringify(user))
           commit(LOGIN_SUCCESS)
           resolve()
         }, 1000)
@@ -61,6 +65,7 @@ const moduleLogin = {
     logout ({commit}) {
       localStorage.removeItem('token')
       localStorage.removeItem('userName')
+      localStorage.removeItem('user')
       commit(LOGOUT)
     }
   },
@@ -113,10 +118,10 @@ const moduleChoiceList = {
       state.playerChoice = playerChoiceValue
     },
     [PLAYER_PLAY] (state) {
-      state.playerWait = true
+      state.playerWait = false
     },
     [PLAYER_WAIT] (state) {
-      state.playerWait = false
+      state.playerWait = true
     }
   },
   getters: {
@@ -129,7 +134,7 @@ const moduleChoiceList = {
     getPlayerChoice: (state) => {
       return state.playerChoice
     },
-    playerWait: (state) => { return state.playerWait }
+    getPlayerWait: (state) => { return state.playerWait }
   },
   computed: {},
   actions: {
@@ -152,7 +157,7 @@ const moduleChoiceList = {
     setPlayerChoice ({commit}, playerChoiceValue) {
       commit('setPlayerChoice', playerChoiceValue)
     },
-    playerWait ({commit}, wait) {
+    setPlayerWait ({commit}, wait) {
       if (wait) { commit(PLAYER_WAIT) } else commit(PLAYER_PLAY)
     }
   }

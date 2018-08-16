@@ -15,11 +15,11 @@
         <hr>
       </div>
       <div class="card-body">
-          <p><span class="font-weight-bold">{{ gameMessage }}:</span></p>
+          <p><span class="font-weight-bold">{{ gameMessage }}</span></p>
       </div>
       <div class="card-body">
         <div class="messages" v-for="(msg, index) in messages" :key="index">
-          <p><span class="font-weight-bold">{{ msg.user }}: </span>{{ msg.message }}</p>
+          <p><span class="font-weight-bold">{{ msg.user }} </span>{{ msg.message }}</p>
         </div>
       </div>
     </div>
@@ -59,23 +59,25 @@
     },
     watch: {
       playerChoice: function (newPlayerChoice) {
+        console.log('button user ' + this.user)
         this.socket.emit('FIRST_CHOICE', {user: this.user, playerFirstChoice: newPlayerChoice})
       }
     },
     mounted () {
+      let self = this
       this.socket.on('MESSAGE', (data) => {
         this.messages = [...this.messages, data]
         // you can also do this.messages.push(data)
       })
       this.socket.on('DATA_RECEIVED', (data) => {
-        this.messages = [...this.messages, data]
+        self.messages = [...this.messages, data]
       })
       this.socket.on('FIRST_CHOICE_RECEIVED', (data) => {
-        this.gameMessage = 'please wait for you turn' // [...this.messages, data]
-        this.$store.actions.playerWait(true)
+        self.gameMessage = 'please wait for your turn' // [...this.messages, data]
+        self.$store.dispatch('setPlayerWait', true)
       })
       this.socket.on('DISABLE_BUTTON', (data) => {
-        this.messages
+        self.messages = null
       })
     }
   }

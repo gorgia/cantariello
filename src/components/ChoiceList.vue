@@ -10,7 +10,7 @@
       </b-row>
     </b-jumbotron>
     <div>
-      <b-button class="btn-success btn-lg" :class="playerWait ? 'disabled': ''" @click="sendChoice()">Send Choice</b-button>
+      <b-button class="btn-success btn-lg" :class="getPlayerWait ? 'disabled': ''" @click="sendChoice()">Send Choice</b-button>
     </div>
     <div>
       <v-dialog/>
@@ -50,8 +50,8 @@ export default {
     getPlayerChoice: function () {
       return this.$store.getters.getPlayerChoice
     },
-    playerWait: function () {
-      return this.$store.getters.playerWait
+    getPlayerWait: function () {
+      return false// return this.$store.getters.getPlayerWait
     }
   },
   methods: {
@@ -74,7 +74,7 @@ export default {
             handler: () => {
               console.log('button confirm pressed')
               this.$store.dispatch('setPlayerChoice', this.selectedBtn)
-              this.$store.dispatch('playerWait', true)
+              this.$store.dispatch('setPlayerWait', true)
               this.$modal.hide('dialog')
             } // Button click handler
           },

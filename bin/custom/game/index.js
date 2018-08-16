@@ -20,7 +20,8 @@ module.exports = class Game {
       })
       socket.on('FIRST_CHOICE', function (data) {
         console.log('FIRST_CHOICE_RECEIVED:' + data)
-        this.playerChoice[data.user._id] = data.playerFirstChoice
+        console.log(`data is \n${data.user}`)
+        self.playerChoice.set(data.user._id, data.playerFirstChoice)
         self.io.emit('FIRST_CHOICE_RECEIVED', data)
       })
     })
