@@ -45,8 +45,9 @@ export default {
       evt.preventDefault()
       const self = this
       axios.post(`${this.$hostname}/api/auth/login/`, this.login)
-        .then(response => {
-          self.$store.dispatch('login', this.login)
+        .then((response) => {
+          console.log(`response: ${response.data}`)
+          self.$store.dispatch('login', response.data)
           // this.$localStorage.set('jwtToken', response.data.token)
           // this.$localStorage.set('userName', response.data.username)
           self.$router.push({

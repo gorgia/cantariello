@@ -10,7 +10,7 @@
       </b-row>
     </b-jumbotron>
     <div>
-      <b-button class="btn-success btn-lg" @click="sendChoice()">Send Choice</b-button>
+      <b-button class="btn-success btn-lg" :class="playerWait ? 'disabled': ''" @click="sendChoice()">Send Choice</b-button>
     </div>
     <div>
       <v-dialog/>
@@ -30,37 +30,40 @@
 <script>
 export default {
   name: 'ChoiceList',
-  data() {
+  data () {
     return {
       selectedBtn: null
-    };
+    }
   },
-  beforeMount: function() {
-    this.$store.dispatch('fetchData');
+  beforeMount: function () {
+    this.$store.dispatch('fetchData')
   },
   computed: {
-    isLoading: function() {
-      return this.$store.getters.getIsChoiceListLoading;
+    isLoading: function () {
+      return this.$store.getters.getIsChoiceListLoading
     },
     btnList: {
-      get: function() {
-        return this.$store.getters.getChoiceList;
+      get: function () {
+        return this.$store.getters.getChoiceList
       }
     },
-    getPlayerChoice: function() {
-      return this.$store.getters.getPlayerChoice;
+    getPlayerChoice: function () {
+      return this.$store.getters.getPlayerChoice
+    },
+    playerWait: function () {
+      return this.$store.getters.playerWait
     }
   },
   methods: {
-    select: function(buttonid) {
-      console.log(`selected button id=${buttonid}`);
-      this.btnList.forEach(function(el) {
-        if (el.value !== buttonid) el.state = false;
-      });
-      this.selectedBtn = buttonid;
+    select: function (buttonid) {
+      console.log(`selected button id=${buttonid}`)
+      this.btnList.forEach(function (el) {
+        if (el.value !== buttonid) el.state = false
+      })
+      this.selectedBtn = buttonid
     },
-    showModal: function() {
-      console.log('Show Modal called');
+    showModal: function () {
+      console.log('Show Modal called')
       this.$modal.show('dialog', {
         title: 'Do you confirm',
         text: 'This is your choice. Are you sure?',
@@ -69,8 +72,9 @@ export default {
             title: 'Confirm', // Button title
             default: true, // Will be triggered by default if 'Enter' pressed.
             handler: () => {
-              console.log("button confirm pressed")
-              this.$store.dispatch('setPlayerChoice', this.selectedBtn);
+              console.log('button confirm pressed')
+              this.$store.dispatch('setPlayerChoice', this.selectedBtn)
+              this.$store.dispatch('playerWait', true)
               this.$modal.hide('dialog')
             } // Button click handler
           },
@@ -78,28 +82,28 @@ export default {
             title: 'Close'
           }
         ]
-      });
+      })
     },
-    sendChoice: function() {
+    sendChoice: function () {
       if (!this.$store.getters.getChoiceList.find(x => x.state === 'playerChoice')) {
-        this.firstChoiceProcessing();
+        this.firstChoiceProcessing()
       }
     },
-    firstChoiceProcessing: function() {
-      console.log('this is playerChoice');
+    firstChoiceProcessing: function () {
+      console.log('this is playerChoice')
       this.showModal('first-choice-dialog')
-      let newstate = 'playerChoice';
-      let selectedBtnValue = this.selectedBtn;
-      console.log(`selectedBtnValue: ${selectedBtnValue}`);
-      let payload = { selectedBtn: selectedBtnValue, newstate };
+      let newstate = 'playerChoice'
+      let selectedBtnValue = this.selectedBtn
+      console.log(`selectedBtnValue: ${selectedBtnValue}`)
+      let payload = { selectedBtn: selectedBtnValue, newstate }
       // this.$store.dispatch('changeChoiceListElementState', payload)
       for (let index in this.btnList) {
         if (this.btnList[index].value === selectedBtnValue) {
-          console.log(`element found`);
-          this.$store.dispatch('disableButton', index);
+          console.log(`element found`)
+          this.$store.dispatch('disableButton', index)
         }
       }
     }
   }
-};
+}
 </script>

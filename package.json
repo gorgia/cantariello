@@ -45,6 +45,7 @@
     "vue-router": "^3.0.1",
     "vue-socket.io": "^2.1.1-b",
     "vuex": "^3.0.1",
+    "vuex-persistedstate": "^2.5.4",
     "ws": "^5.2.1"
   },
   "devDependencies": {
