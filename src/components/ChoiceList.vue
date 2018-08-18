@@ -3,7 +3,7 @@
     <div v-if="isLoading">Loading...</div>
     <b-jumbotron fluid v-if="!isLoading">
       <b-row v-if="!isLoading" v-model="btnList" v-for="i in Math.ceil(btnList.length / 3)" :key = i>
-        <b-button  v-if="!isLoading" v-for="btn in btnList.slice((i - 1) * 3, i * 3)" :key="btn.value" :class="[btn.disabled ? (btn.value === getPlayerChoice) ? 'disabled playerChoice bg-success' : 'disabled' : '']"
+        <b-button  v-if="!isLoading" v-for="btn in btnList.slice((i - 1) * 3, i * 3)" :key="btn.value" :class="[btn.disabled ? (btn.value === getPlayerChoice) ? 'disabled userIdPlayerFirstChoiceMap bg-success' : 'disabled' : '']"
                   class="btn-outline-primary col" :ref="btn.value" @click="select(btn.value)">
           {{ btn.text }}
         </b-button>

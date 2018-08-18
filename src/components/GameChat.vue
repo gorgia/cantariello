@@ -6,6 +6,11 @@
           <label>Message:</label>
           <input type="text" v-model="message" class="form-control">
         </div>
+        <div class="card-body">
+          <div class="messages" v-for="(msg, index) in messages" :key="index">
+            <p><span class="font-weight-bold">{{ msg.user }} </span>{{ msg.message }}</p>
+          </div>
+        </div>
         <button type="submit" class="btn btn-success">Send</button>
       </form>
     </div>
@@ -15,12 +20,7 @@
         <hr>
       </div>
       <div class="card-body">
-          <p><span class="font-weight-bold">{{ gameMessage }}</span></p>
-      </div>
-      <div class="card-body">
-        <div class="messages" v-for="(msg, index) in messages" :key="index">
-          <p><span class="font-weight-bold">{{ msg.user }} </span>{{ msg.message }}</p>
-        </div>
+          <h1><p><span class="font-weight-bold">{{ gameMessage }}</span></p></h1>
       </div>
     </div>
   </div>
@@ -34,7 +34,6 @@
       return {
         message: '',
         messages: [],
-        gameMessage: '',
         socket: io(`${this.$hostname}`, {query: {user: this.$store.getters.user}})
       }
     },
@@ -55,6 +54,9 @@
       },
       user: function () {
         return this.$store.getters.user
+      },
+      gameMessage: function () {
+        return this.$store.getters.getGameMessage
       }
     },
     watch: {

@@ -1,10 +1,15 @@
 const myCache = require('../cache').myCache
+const circularIterator = require('circular-iterator')
 
 module.exports = class Game {
   constructor (props) {
     this.io = props.io
-    this.playerList = new Map()
-    this.playerChoice = new Map()
+    this.playerSocketMap = new Map()
+    this.userIdPlayerFirstChoiceMap = new Map()
+    this.playerList = []
+    this.turnController = null
+    this.listenOnGame()
+    this.waitForGameStart()
   }
 
   listenOnGame () {
@@ -13,7 +18,8 @@ module.exports = class Game {
       console.log(`Client connected [id=${socket.id}], number of clients: ${this.clientsConnected()}`)
       let user = socket.handshake.query.user
       console.log(`retrieved user connected\n${user}`)
-      this.playerList.set(socket.id, user)
+      this.playerSocketMap.set(user.id, socket.id)
+      this.playerList.push(user)
       socket.on('SEND_MESSAGE', function (data) {
         console.log('SEND_MESSAGE:' + data)
         self.io.emit('MESSAGE', data)
@@ -21,7 +27,7 @@ module.exports = class Game {
       socket.on('FIRST_CHOICE', function (data) {
         console.log('FIRST_CHOICE_RECEIVED:' + data)
         console.log(`data is \n${data.user}`)
-        self.playerChoice.set(data.user._id, data.playerFirstChoice)
+        self.userIdPlayerFirstChoiceMap.set(data.user._id, data.playerFirstChoice)
         self.io.emit('FIRST_CHOICE_RECEIVED', data)
       })
       socket.on('PLAYER_TURN_CHOICE', function (data) {
@@ -31,8 +37,40 @@ module.exports = class Game {
     })
   }
 
+  async waitForGameStart () {
+    let promise = new Promise((resolve, reject) => {
+      (function waitForAllPlayersFirtsChoie () {
+        if (this.userIdPlayerFirstChoiceMap.size === this.playerSocketMap.size) {
+          resolve(true)
+        }
+      })()
+    })
+    await promise
+    this.orderPLayerListByScore()
+    this.turnController = circularIterator(this.playerList)
+    this.nextGameTurn()
+  }
+
+  nextGameTurn () {
+    let actualPlayer = this.turnController.next
+    // let actualPlayerSocket = this.playerSocketMap[actualPlayer._id]
+    this.io.emit(`PLAYER_TURN`, {actualPlayer})
+  }
+
+  orderPLayerListByScore () {
+    this.playerList.sort((u1, u2) => {
+      if (u1.score > u2.score) {
+        return 1
+      }
+      if (u1.score < u2.score) {
+        return -1
+      }
+      return 0
+    })
+  }
+
   addPlayerToPlayerList (socketid, user) {
-    this.playerList.set(socketid, user)
+    this.playerSocketMap.set(socketid, user)
   }
 
   clientsConnected () {
@@ -50,11 +88,11 @@ module.exports = class Game {
   eliminatePlayersByChoice (choice) {
     let usersEliminated = []
     let self = this
-      this.playerChoice.forEach((key, value) => {
+      this.userIdPlayerFirstChoiceMap.forEach((key, value) => {
         if (value === choice) {
           let userEliminated = self.eliminatePlayerByUserId(key)
           if (userEliminated) usersEliminated.push(userEliminated)
-          this.playerChoice.delete(key)
+          this.userIdPlayerFirstChoiceMap.delete(key)
         }
       })
     return usersEliminated
@@ -62,10 +100,10 @@ module.exports = class Game {
 
   eliminatePlayerByUserId (userId) {
     let userEliminated = null
-    this.playerList.forEach(function (key, value) {
+    this.playerSocketMap.forEach(function (key, value) {
       if (value._id === userId) {
         userEliminated = value
-        this.playerList.delete(key)
+        this.playerSocketMap.delete(key)
       }
     })
     return userEliminated

@@ -92,7 +92,8 @@ const moduleChoiceList = {
     choiceList: [],
     isLoading: true,
     playerChoice: null,
-    playerWait: false
+    playerWait: false,
+    gameMessage: `Please make your choice`
   },
   mutations: {
     loadList (state, list) {
@@ -109,7 +110,7 @@ const moduleChoiceList = {
         return obj.value === payload.selectedBtn
       })
       state.choiceList[indextochange].state = null
-      state.choiceList[indextochange].playerChoice = true
+      state.choiceList[indextochange].userIdPlayerFirstChoiceMap = true
     },
     disableButton (state, index) {
       Vue.set(state.choiceList[index], 'disabled', true)
@@ -122,7 +123,8 @@ const moduleChoiceList = {
     },
     [PLAYER_WAIT] (state) {
       state.playerWait = true
-    }
+    },
+    setGameMessage (state, gameMessage) { state.gameMessage = gameMessage }
   },
   getters: {
     getChoiceList: (state) => {
@@ -134,7 +136,8 @@ const moduleChoiceList = {
     getPlayerChoice: (state) => {
       return state.playerChoice
     },
-    getPlayerWait: (state) => { return state.playerWait }
+    getPlayerWait: (state) => { return state.playerWait },
+    getGameMessage: (state) => { return state.gameMessage }
   },
   computed: {},
   actions: {
@@ -159,6 +162,9 @@ const moduleChoiceList = {
     },
     setPlayerWait ({commit}, wait) {
       if (wait) { commit(PLAYER_WAIT) } else commit(PLAYER_PLAY)
+    },
+    setGameMessage ({commit}, message) {
+      commit('setGameMessage', message)
     }
   }
 }
