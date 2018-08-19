@@ -93,7 +93,8 @@ const moduleChoiceList = {
     isLoading: true,
     playerChoice: null,
     playerWait: false,
-    gameMessage: `Please make your choice`
+    gameMessage: `Please make your choice`,
+    gameStarted: false
   },
   mutations: {
     loadList (state, list) {
@@ -124,7 +125,8 @@ const moduleChoiceList = {
     [PLAYER_WAIT] (state) {
       state.playerWait = true
     },
-    setGameMessage (state, gameMessage) { state.gameMessage = gameMessage }
+    setGameMessage (state, gameMessage) { state.gameMessage = gameMessage },
+    startGame (state) { state.gameStarted = true }
   },
   getters: {
     getChoiceList: (state) => {
@@ -137,7 +139,8 @@ const moduleChoiceList = {
       return state.playerChoice
     },
     getPlayerWait: (state) => { return state.playerWait },
-    getGameMessage: (state) => { return state.gameMessage }
+    getGameMessage: (state) => { return state.gameMessage },
+    getGameStarted: (state) => { return state.gameStarted }
   },
   computed: {},
   actions: {
@@ -165,6 +168,9 @@ const moduleChoiceList = {
     },
     setGameMessage ({commit}, message) {
       commit('setGameMessage', message)
+    },
+    startGame ({commit}){
+      commit('startGame')
     }
   }
 }

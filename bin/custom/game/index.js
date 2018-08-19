@@ -9,17 +9,19 @@ module.exports = class Game {
     this.playerList = []
     this.turnController = null
     this.listenOnGame()
-    this.waitForGameStart()
+    // this.waitForGameStart()
   }
 
   listenOnGame () {
     let self = this
     this.io.on('connection', (socket) => {
-      console.log(`Client connected [id=${socket.id}], number of clients: ${this.clientsConnected()}`)
+      this.updateNumberOfClientsConnected()
+      console.log(`Client connected [id=${socket.id}], number of clients: ${this.getNumberOfClientsConnected()}`)
       let user = socket.handshake.query.user
       console.log(`retrieved user connected\n${user}`)
-      this.playerSocketMap.set(user.id, socket.id)
+      this.playerSocketMap.set(user._id, socket.id)
       this.playerList.push(user)
+      this.io.sockets.emit('NUMBER_OF_CLIENTS_CONNECTED', this.getNumberOfClientsConnected())
       socket.on('SEND_MESSAGE', function (data) {
         console.log('SEND_MESSAGE:' + data)
         self.io.emit('MESSAGE', data)
@@ -37,6 +39,7 @@ module.exports = class Game {
     })
   }
 
+  /*
   async waitForGameStart () {
     let promise = new Promise((resolve, reject) => {
       (function waitForAllPlayersFirtsChoie () {
@@ -49,7 +52,7 @@ module.exports = class Game {
     this.orderPLayerListByScore()
     this.turnController = circularIterator(this.playerList)
     this.nextGameTurn()
-  }
+  } */
 
   nextGameTurn () {
     let actualPlayer = this.turnController.next
@@ -73,11 +76,14 @@ module.exports = class Game {
     this.playerSocketMap.set(socketid, user)
   }
 
-  clientsConnected () {
+  updateNumberOfClientsConnected () {
     const srvSockets = this.io.sockets.sockets
-    let clientsConnected = Object.keys(srvSockets).length
-    myCache.set(`clientsConnected`, clientsConnected)
-    return clientsConnected
+    let numberOfClientsConnected = Object.keys(srvSockets).length
+    myCache.set(`numberOfClientsConnected`, numberOfClientsConnected)
+  }
+
+  getNumberOfClientsConnected () {
+    return myCache.get('numberOfClientsConnected')
   }
 
   processPlayerChoice (player, choice) {

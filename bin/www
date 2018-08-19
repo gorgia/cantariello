@@ -6,7 +6,6 @@
 const app = require('./server.js')
 const debug = require('debug')('mean-app:server')
 const http = require('http')
-const socket = require('./custom/mysocket.io')
 const socketio = require('socket.io')
 const Game = require('./custom/game')
 
@@ -29,23 +28,6 @@ const server = http.createServer(app)
 let io = socketio(server, {origins: '*:*'})
 let game = new Game({io: io})
 game.listenOnGame()
-
-/*
-const io = require('socket.io')(server, {origins: '*:*'})
-
-io.on('connection', function (socket) {
-  console.log(`Client connected [id=${socket.id}], number of clients: ${clientsConnected()}`)
-  socket.on('SEND_MESSAGE', function (data) {
-    console.log('SEND_MESSAGE:' + data)
-    io.emit('MESSAGE', data)
-  })
-})
-
-function clientsConnected() {
-  var srvSockets = io.sockets.sockets;
-  return Object.keys(srvSockets).length;
-}
-*/
 
 /**
  * Listen on provided port, on all network interfaces.

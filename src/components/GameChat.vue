@@ -27,14 +27,13 @@
 </template>
 
 <script>
-  import io from 'socket.io-client'
 
   export default {
+    props: ['socket'],
     data () {
       return {
         message: '',
-        messages: [],
-        socket: io(`${this.$hostname}`, {query: {user: this.$store.getters.user}})
+        messages: []
       }
     },
     methods: {
