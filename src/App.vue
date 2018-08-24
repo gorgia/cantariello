@@ -7,7 +7,6 @@
       <b-nav-item :to=getProfileOfUrl v-if=getIsLoggedIn>Your Profile: {{getUsername}}</b-nav-item>
       <b-nav-item to="'users'" v-if=getIsLoggedIn>Users</b-nav-item>
       <b-nav-item v-if=getIsLoggedIn @click="logout">Logout</b-nav-item>
-      <b-nav-item to="/chat" v-if=getIsLoggedIn>Chat</b-nav-item>
       <b-nav-item to="/choice" v-if=getIsLoggedIn>Choice</b-nav-item>
       <b-nav-item to="/game" v-if=getIsLoggedIn>Game</b-nav-item>
     </b-navbar>

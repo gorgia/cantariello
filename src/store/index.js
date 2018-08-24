@@ -2,10 +2,13 @@ import Vuex from 'vuex'
 import Vue from 'vue'
 import axios from 'axios'
 import createPersistedState from 'vuex-persistedstate'
-import {HOSTNAME} from '../config'
+import config from '../config'
 
 Vue.use(Vuex)
 
+// const config = require('../config')
+const HOSTNAME = config.HOSTNAME
+const GAME_STATUS = config.GAME_STATUS
 const LOGIN = 'LOGIN'
 const LOGIN_SUCCESS = 'LOGIN_SUCCESS'
 const LOGOUT = 'LOGOUT'
@@ -26,7 +29,7 @@ const moduleLogin = {
       state.pending = false
       state.isLoggedIn = localStorage.getItem('token')
       state.userName = localStorage.getItem('userName')
-      state.user = localStorage.getItem('user')
+      state.user = JSON.parse(localStorage.getItem('user'))
     },
     [LOGOUT] (state) {
       state.isLoggedIn = false
@@ -37,7 +40,7 @@ const moduleLogin = {
       if (localStorage.getItem('token')) {
         state.isLoggedIn = localStorage.getItem('token')
         state.userName = localStorage.getItem('userName')
-        state.user = localStorage.getItem('user')
+        state.user = JSON.parse(localStorage.getItem('user'))
       }
     }
   },
@@ -50,7 +53,6 @@ const moduleLogin = {
       console.log('login...', creds)
       commit(LOGIN) // show spinner
       const user = creds.user
-      const userName = creds.user.username
       return new Promise(resolve => {
         setTimeout(() => {
           console.log(`${user.username} user in login action\n${user}`)
@@ -86,6 +88,8 @@ const LOAD_FINISHED = 'LOAD_FINISHED'
 const LOADING = 'LOADING'
 const PLAYER_WAIT = 'PLAYER_WAIT'
 const PLAYER_PLAY = 'PLAYER_PLAY'
+const GAME_STARTED = 'GAME_STARTED'
+const PLAYER_CHOICE_WAIT = `PLAYER_CHOICE_WAIT`
 
 const moduleChoiceList = {
   state: {
@@ -93,11 +97,13 @@ const moduleChoiceList = {
     isLoading: true,
     playerChoice: null,
     playerWait: false,
-    gameMessage: `Please make your choice`,
-    gameStarted: false
+    gameMessage: `Please wait for game start`,
+    gameStarted: '',
+    playerTurn: null,
+    gameStatus: GAME_STATUS.WAIT_FOR_START
   },
   mutations: {
-    loadList (state, list) {
+    setChoiceList (state, list) {
       state.choiceList = list
     },
     [LOAD_FINISHED] (state) {
@@ -126,7 +132,10 @@ const moduleChoiceList = {
       state.playerWait = true
     },
     setGameMessage (state, gameMessage) { state.gameMessage = gameMessage },
-    startGame (state) { state.gameStarted = true }
+    [GAME_STARTED] (state) { state.gameStarted = true },
+    [PLAYER_CHOICE_WAIT] (state) { if (state.playerChoice && !state.turnOfPlayer) state.gameMessage = 'Please wait for the other players' },
+    setGameStatus (state, gameStatus) { state.gameStatus = gameStatus },
+    setPlayerTurn (state, playerTurn) {state.playerTurn = playerTurn }
   },
   getters: {
     getChoiceList: (state) => {
@@ -140,7 +149,9 @@ const moduleChoiceList = {
     },
     getPlayerWait: (state) => { return state.playerWait },
     getGameMessage: (state) => { return state.gameMessage },
-    getGameStarted: (state) => { return state.gameStarted }
+    getGameStarted: (state) => { return state.gameStarted },
+    getGameStatus: (state) => { return state.gameStatus },
+    getPlayerTurn: (state) => { return state.playerTurn }
   },
   computed: {},
   actions: {
@@ -150,9 +161,12 @@ const moduleChoiceList = {
         .then((response) => {
           console.log('data resolved\n' + response.data)
           let choiceList = response.data
-          commit('loadList', choiceList)
+          commit('setChoiceList', choiceList)
           commit(LOAD_FINISHED) // this.isLoading = false
         })
+    },
+    setChoiceList ({commit}, choiceList) {
+      commit('setChoiceList', choiceList)
     },
     changeChoiceListElementState ({commit}, payload) {
       commit('changeChoiceListElementState', payload)
@@ -169,8 +183,25 @@ const moduleChoiceList = {
     setGameMessage ({commit}, message) {
       commit('setGameMessage', message)
     },
-    startGame ({commit}){
-      commit('startGame')
+    startGame ({commit}) {
+      commit(GAME_STARTED)
+    },
+    setPlayerTurn ({commit}, playerTurn) { commit('setPlayerTurn', playerTurn) },
+    updateStatus ({commit}, gameStatusContainer) {
+      let gameStatus = gameStatusContainer.gameStatus
+      commit('setGameStatus', gameStatus)
+      switch (gameStatus) {
+        case GAME_STATUS.WAIT_FOR_START:
+          commit('setPlayerChoice', null)
+          break
+        case GAME_STATUS.WAIT_FOR_PLAYERCHOICE:
+          commit('setChoiceList', gameStatusContainer.choiceList)
+          break
+        case GAME_STATUS.PLAYING:
+          commit('setChoiceList', gameStatusContainer.choiceList)
+          commit('playerTurn', gameStatusContainer.playerTurn)
+          break
+      }
     }
   }
 }

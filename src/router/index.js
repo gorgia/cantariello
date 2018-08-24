@@ -3,7 +3,6 @@ import Router from 'vue-router'
 import Login from '@/components/Login'
 import Register from '@/components/Register'
 import Profile from '@/components/Profile'
-import Chat from '@/components/Chat'
 import Choice from '@/components/Choice'
 import Game from '@/components/Game'
 import Home from '@/components/Home'
@@ -31,11 +30,6 @@ export default new Router({
       path: '/profile/:username',
       name: 'Profile',
       component: Profile
-    },
-    {
-      path: '/chat',
-      name: 'Chat',
-      component: Chat
     },
     {
       path: '/choice',

@@ -22,14 +22,6 @@ app.set('port', port)
 const server = http.createServer(app)
 
 /**
- * Create socket.io server and listen
- * @type {Server}
- */
-let io = socketio(server, {origins: '*:*'})
-let game = new Game({io: io})
-game.listenOnGame()
-
-/**
  * Listen on provided port, on all network interfaces.
  */
 
@@ -58,12 +50,20 @@ function normalizePort (val) {
 }
 
 /**
+ * Create socket.io server and listen
+ * @type {Server}
+ */
+let io = socketio(server, {origins: '*:*'})
+let game = new Game({io: io})
+game.listenOnGame()
+
+/**
  * Event listener for HTTP server "error" event.
  */
 
 function onError (error) {
   if (error.syscall !== 'listen') {
-    throw errors
+    throw error
   }
 
   let bind = typeof port === 'string'

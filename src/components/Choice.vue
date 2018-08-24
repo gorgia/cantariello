@@ -24,8 +24,6 @@
     <div>
       <b-button class="btn-success btn-lg">Send Choice</b-button>
     </div>
-    <chat>
-    </chat>
   </div>
 </template>
 <style>
@@ -35,12 +33,7 @@
 }
 </style>
 <script>
-  import Chat from './Chat.vue'
-
   export default {
-    components: {
-      Chat
-    },
     data () {
       return {
         roomName: null,

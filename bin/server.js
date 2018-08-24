@@ -22,11 +22,12 @@ mongoose.connect('mongodb://localhost/mevn-secure', { promiseLibrary: require('b
 
 // allow cors origins for debug
 
-app.use(favicon(__dirname + '/favicon.ico'))
+app.use(favicon(path.join(__dirname, '/favicon.ico')))
 app.use(logger('dev'))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({'extended': 'false'}))
-app.use(express.static(path.join(__dirname, 'dist')))
+app.use(express.static(path.join(__dirname, '..', 'dist')))
+app.set('view engine', 'html')
 app.use('/books', express.static(path.join(__dirname, 'dist')))
 app.use('/book', book)
 app.use('/api/auth', auth)

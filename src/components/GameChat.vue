@@ -1,33 +1,28 @@
 <template>
   <div class="card mt-3">
     <div class="card-body">
-      <form @submit.prevent="sendMessage">
         <div class="gorm-group pb-3">
           <label>Message:</label>
           <input type="text" v-model="message" class="form-control">
         </div>
-        <div class="card-body">
-          <div class="messages" v-for="(msg, index) in messages" :key="index">
-            <p><span class="font-weight-bold">{{ msg.user }} </span>{{ msg.message }}</p>
-          </div>
-        </div>
-        <button type="submit" class="btn btn-success">Send</button>
-      </form>
+        <button v-on:click.prevent="sendMessage" class="btn btn-success btn-primary">Send</button>
     </div>
     <div class="card-footer">
       <div class="card-title">
         <h3>Chat Group</h3>
         <hr>
       </div>
-      <div class="card-body">
-          <h1><p><span class="font-weight-bold">{{ gameMessage }}</span></p></h1>
+    </div>
+    <div>messages are {{messages}}</div>
+    <div class="card-body">
+      <div class="messages" v-for="(msg, index) in messages" :key="index">
+        <p><span class="font-weight-bold"></span>{{ msg.message }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-
   export default {
     props: ['socket'],
     data () {
@@ -37,15 +32,16 @@
       }
     },
     methods: {
-      sendMessage(e) {
+      sendMessage (e) {
         e.preventDefault()
-        console.log('SEND_MESSAGE:' + this.message)
-        this.socket.emit('SEND_MESSAGE', {
-          user: this.user.userName,
+        let messageToBeSent = {
+          username: this.$store.getters.userName,
           message: this.message
-        })
+        }
+        console.log('sendMessage() invoked: ' + messageToBeSent)
+        this.socket.emit('CHAT_MESSAGE', messageToBeSent)
         this.message = ''
-      },
+      }
     },
     computed: {
       playerChoice: function () {
@@ -53,9 +49,6 @@
       },
       user: function () {
         return this.$store.getters.user
-      },
-      gameMessage: function () {
-        return this.$store.getters.getGameMessage
       }
     },
     watch: {
@@ -67,8 +60,8 @@
     mounted () {
       let self = this
       this.socket.on('MESSAGE', (data) => {
-        this.messages = [...this.messages, data]
-        // you can also do this.messages.push(data)
+        console.log('message received ' + data)
+        self.messages.push(data)
       })
       this.socket.on('DATA_RECEIVED', (data) => {
         self.messages = [...this.messages, data]

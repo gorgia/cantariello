@@ -7,12 +7,9 @@ import router from './router'
 import VueLocalStorage from 'vue-localstorage'
 import store from './store'
 import VModal from 'vue-js-modal'
-// import SocketIO from 'socket.io'
-// import VueSocketIO from 'vue-socket.io'
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
-// const SocketInstance = SocketIO('http://localhost:3000/chat', {wsEngine: 'ws'})
 
 Vue.use(BootstrapVue)
 Vue.use(VueLocalStorage)

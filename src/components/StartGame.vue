@@ -22,11 +22,16 @@
           gameStarted: function () { return this.$store.getters.gameStarted() }
       },
       methods: {
-          startGame () { this.$store.dispatch('startGame') }
+          startGame () {
+            this.$store.dispatch('startGame')
+            this.socket.emit(`START_GAME`)
+          }
       },
       mounted () {
         const self = this
+        this.socket.emit('GET_NUMBER_OF_CLIENTS_CONNECTED')
         this.socket.on('NUMBER_OF_CLIENTS_CONNECTED', (data) => {
+          console.log(`NUMBER_OF_CLIENTS_CONNECTED received ${data}`)
           self.numberOfPlayersConnected = data
         })
       }

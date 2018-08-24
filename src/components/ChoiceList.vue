@@ -10,7 +10,7 @@
       </b-row>
     </b-jumbotron>
     <div>
-      <b-button class="btn-success btn-lg" :class="getPlayerWait ? 'disabled': ''" @click="sendChoice()">Send Choice</b-button>
+      <b-button class="btn-success btn-lg" :class="isMyTurn ? '': 'disabled'" @click="sendChoice()">Send Choice</b-button>
     </div>
     <div>
       <v-dialog/>
@@ -30,6 +30,7 @@
 <script>
 export default {
   name: 'ChoiceList',
+  props: ['socket'],
   data () {
     return {
       selectedBtn: null
@@ -52,7 +53,20 @@ export default {
     },
     getPlayerWait: function () {
       return false// return this.$store.getters.getPlayerWait
+    },
+    isMyTurn: function () {
+      if (!this.playerTurn) return true
+      return this.$store.getters.user._id === this.playerTurn._id
     }
+  },
+  mounted () {
+    let self = this
+    this.socket.on('CHOICE_LIST', (data) => {
+      console.log('CHOICE_LIST received ' + data)
+    })
+    this.socket.on('PLAYER_TURN', (data) => {
+      this.playerTurn = data
+    })
   },
   methods: {
     select: function (buttonid) {
@@ -73,9 +87,12 @@ export default {
             default: true, // Will be triggered by default if 'Enter' pressed.
             handler: () => {
               console.log('button confirm pressed')
+              let playerChoice = this.selectedBtn
               this.$store.dispatch('setPlayerChoice', this.selectedBtn)
               this.$store.dispatch('setPlayerWait', true)
               this.$modal.hide('dialog')
+              let user = this.$store.getters.user
+              this.socket.emit('FIRST_CHOICE', {user: user, playerFirstChoice: playerChoice})
             } // Button click handler
           },
           {
@@ -99,6 +116,15 @@ export default {
       // this.$store.dispatch('changeChoiceListElementState', payload)
       for (let index in this.btnList) {
         if (this.btnList[index].value === selectedBtnValue) {
+          console.log(`element found`)
+          this.$store.dispatch('disableButton', index)
+        }
+      }
+    },
+    modifyPlayerFirstChoiceButton: function () {
+      let playerChoiceValue = this.$store.getters.getPlayerChoice
+      for (let index in this.btnList) {
+        if (this.btnList[index].value === playerChoiceValue) {
           console.log(`element found`)
           this.$store.dispatch('disableButton', index)
         }
