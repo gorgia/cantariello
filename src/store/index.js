@@ -96,7 +96,7 @@ const moduleChoiceList = {
     choiceList: [],
     playerChoice: null,
     playerWait: false,
-    gameMessage: 'Wait for all players to reach this page the push the button',
+    gameMessage: 'Wait for all players to reach this page then push the button',
     playerTurn: null,
     gameStatus: GAME_STATUS.WAIT_FOR_START,
     playersInPlay: [],
