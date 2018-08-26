@@ -94,13 +94,13 @@ const PLAYER_CHOICE_WAIT = `PLAYER_CHOICE_WAIT`
 const moduleChoiceList = {
   state: {
     choiceList: [],
-    isLoading: true,
     playerChoice: null,
     playerWait: false,
-    gameMessage: `Please wait for game start`,
-    gameStarted: '',
+    gameMessage: 'Wait for all players to reach this page the push the button',
     playerTurn: null,
-    gameStatus: GAME_STATUS.WAIT_FOR_START
+    gameStatus: GAME_STATUS.WAIT_FOR_START,
+    playersInPlay: [],
+    playersEliminated: []
   },
   mutations: {
     setChoiceList (state, list) {
@@ -119,7 +119,7 @@ const moduleChoiceList = {
       state.choiceList[indextochange].state = null
       state.choiceList[indextochange].userIdPlayerFirstChoiceMap = true
     },
-    disableButton (state, index) {
+    disableButtonByIndex (state, index) {
       Vue.set(state.choiceList[index], 'disabled', true)
     },
     setPlayerChoice (state, playerChoiceValue) {
@@ -132,47 +132,39 @@ const moduleChoiceList = {
       state.playerWait = true
     },
     setGameMessage (state, gameMessage) { state.gameMessage = gameMessage },
-    [GAME_STARTED] (state) { state.gameStarted = true },
-    [PLAYER_CHOICE_WAIT] (state) { if (state.playerChoice && !state.turnOfPlayer) state.gameMessage = 'Please wait for the other players' },
     setGameStatus (state, gameStatus) { state.gameStatus = gameStatus },
-    setPlayerTurn (state, playerTurn) {state.playerTurn = playerTurn }
+    setPlayersInPlay (state, playersInPlay) { state.playersInPlay = playersInPlay },
+    setPlayersEliminated (state, playersEliminated) { state.playersEliminated = playersEliminated },
+    setPlayerTurn (state, playerTurn) { state.playerTurn = playerTurn }
   },
   getters: {
     getChoiceList: (state) => {
       return state.choiceList
-    },
-    getIsChoiceListLoading: (state) => {
-      return state.isLoading
     },
     getPlayerChoice: (state) => {
       return state.playerChoice
     },
     getPlayerWait: (state) => { return state.playerWait },
     getGameMessage: (state) => { return state.gameMessage },
-    getGameStarted: (state) => { return state.gameStarted },
     getGameStatus: (state) => { return state.gameStatus },
-    getPlayerTurn: (state) => { return state.playerTurn }
+    getPlayerTurn: (state) => { return state.playerTurn },
+    getPlayersInPlay: (state) => { return state.playersInPlay },
+    getPlayersEliminated: (state) => { return state.playersEliminated }
   },
-  computed: {},
   actions: {
-    fetchData ({commit}) {
-      commit(LOADING)
-      return axios.get(`${HOSTNAME}/service/randomlist`)
-        .then((response) => {
-          console.log('data resolved\n' + response.data)
-          let choiceList = response.data
-          commit('setChoiceList', choiceList)
-          commit(LOAD_FINISHED) // this.isLoading = false
-        })
-    },
     setChoiceList ({commit}, choiceList) {
       commit('setChoiceList', choiceList)
     },
     changeChoiceListElementState ({commit}, payload) {
       commit('changeChoiceListElementState', payload)
     },
-    disableButton ({commit}, buttonIndex) {
-      commit('disableButton', buttonIndex)
+    disableButtonByIndex ({commit}, buttonIndex) {
+      commit('disableButtonByIndex', buttonIndex)
+    },
+    disableButtonByValue({commit}, buttonValue) {
+      let choiceList = this.getters.getChoiceList
+      let index = choiceList.findIndex(el => el.id === buttonValue)
+      this.dispatch('disableButtonByIndex', index)
     },
     setPlayerChoice ({commit}, playerChoiceValue) {
       commit('setPlayerChoice', playerChoiceValue)
@@ -183,23 +175,27 @@ const moduleChoiceList = {
     setGameMessage ({commit}, message) {
       commit('setGameMessage', message)
     },
-    startGame ({commit}) {
-      commit(GAME_STARTED)
-    },
     setPlayerTurn ({commit}, playerTurn) { commit('setPlayerTurn', playerTurn) },
     updateStatus ({commit}, gameStatusContainer) {
-      let gameStatus = gameStatusContainer.gameStatus
-      commit('setGameStatus', gameStatus)
-      switch (gameStatus) {
+      if (gameStatusContainer.gameStatus) commit('setGameStatus', gameStatusContainer.gameStatus)
+      if (gameStatusContainer.gameMessage) commit('setGameMessage', gameStatusContainer.gameMessage)
+      switch (gameStatusContainer.gameStatus) {
         case GAME_STATUS.WAIT_FOR_START:
           commit('setPlayerChoice', null)
+          commit('setGameMessage', 'Wait for all players to reach this page the push the button')
           break
         case GAME_STATUS.WAIT_FOR_PLAYERCHOICE:
           commit('setChoiceList', gameStatusContainer.choiceList)
           break
         case GAME_STATUS.PLAYING:
-          commit('setChoiceList', gameStatusContainer.choiceList)
-          commit('playerTurn', gameStatusContainer.playerTurn)
+          if (gameStatusContainer.playerChoice) this.dispatch('setPlayerChoice', gameStatusContainer.playerChoice)
+          if (gameStatusContainer.choiceList) {
+            commit('setChoiceList', gameStatusContainer.choiceList)
+            this.dispatch('setPlayerChoice', this.getters.getPlayerChoice)
+          }
+          if (gameStatusContainer.playerTurn) commit('setPlayerTurn', gameStatusContainer.playerTurn)
+          if (gameStatusContainer.playersInPlay) commit('setPlayersInPlay', gameStatusContainer.playersInPlay)
+          if (gameStatusContainer.playersEliminated) commit('setPlayersEliminated', gameStatusContainer.playersEliminated)
           break
       }
     }
@@ -210,6 +206,6 @@ export default new Vuex.Store({
   modules: {
     a: moduleLogin,
     b: moduleChoiceList
-  },
-  plugins: [createPersistedState()]
+  } // ,
+  // plugins: [createPersistedState()]
 })

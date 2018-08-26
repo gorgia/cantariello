@@ -16,7 +16,8 @@ module.exports = class Game {
     this.playerList = []
     this.turnController = null
     this.userIdUserMap = new Map()
-    this.gamestatus = GAME_STATUS.WAIT_FOR_START
+    this.gameStatus = GAME_STATUS.WAIT_FOR_START
+    this.choiceList = []
     // this.waitForGameStart()
   }
 
@@ -52,7 +53,7 @@ module.exports = class Game {
       })
       socket.on('PLAYER_TURN_CHOICE', function (data) {
         console.log(`PLAYER_TURN_CHOICE_RECEIVED`, data)
-        self.io.emit(`DISABLE_BUTTON`)
+        self.processPlayerChoice(data)
       })
       socket.on('disconnect', function () {
         console.log(`DISCONNECT: NUMBER_OF_CLIENTS_CONNECTED:${self.updateAndGetNumberOfClientsConnected()}`)
@@ -62,9 +63,11 @@ module.exports = class Game {
         console.log(`START_GAME received`)
         self.startGame(self.playerList.length)
       })
-      socket.on('REQUEST_GAME_STATUS', function (data, callback) {
-        console.log(`username = ${data}`)
-        let gameStatsExpanded = {gameStatus: self.gamestatus, choiceList: myCache.get('choiceList')}
+      socket.on('REQUEST_GAME_STATUS', function (userId, callback) {
+        console.log(`userId = ${userId}`)
+        let playerChoice = self.userIdPlayerFirstChoiceMap.get(userId)
+        let gameStatsExpanded = {gameStatus: self.gameStatus, choiceList: self.choiceList, playerChoice: playerChoice}
+        if (self.gameStatus === GAME_STATUS.WAIT_FOR_START) self.io.emit('GAME_MESSAGE', 'Waiting for other players to reach this page then push the button')
         callback(gameStatsExpanded)
       })
       socket.on('GET_NUMBER_OF_CLIENTS_CONNECTED', function () {
@@ -76,35 +79,32 @@ module.exports = class Game {
   }
 
   startGame (numberOfPlayers) {
-    this.gamestatus = GAME_STATUS.WAIT_FOR_PLAYERCHOICE
-    this.io.emit(`GAME_STATUS`, this.gamestatus)
-    this.io.emit('GAME_MESSAGE', 'Please make your choice')
-    myCache.set('choiceList', null)
-    this.sendUpdatedChoiceList(numberOfPlayers, this.gamestatus)
+    let self = this
+    this.gameStatus = GAME_STATUS.WAIT_FOR_PLAYERCHOICE
+    randomListGenerator.getListPromise(numberOfPlayers).then(function (choiceList) {
+      self.choiceList = choiceList.data.query.random
+      // self.io.emit('GAME_MESSAGE', 'Please make your choice')
+      self.io.emit(`GAME_STATUS`, { gameStatus: self.gameStatus, choiceList: self.choiceList })
+    })
   }
 
   waitForPlayersFirstChoice () {
     if (this.userIdUserMap.size === this.userIdPlayerFirstChoiceMap.size) {
       this.orderPLayerListByScore()
-      this.turnController = circularIterator(Array.from(this.userIdUserMap.values()))
       this.nextGameTurn()
     }
   }
 
-  sendUpdatedChoiceList (numberOfPlayers, gameStatus) {
-    let choiceList
-    // if (myCache.get('choiceList')) choiceList = myCache.get('choiceList')
-    // else
-    choiceList = randomListGenerator.getListPromise(numberOfPlayers)
-    this.io.emit('UPDATE_STATUS', {choiceList: choiceList, gameStatus: gameStatus})
-  }
-
   nextGameTurn () {
-    this.gamestatus = GAME_STATUS.PLAYING
+    this.gameStatus = GAME_STATUS.PLAYING
+    this.turnController = circularIterator(Array.from(this.userIdUserMap.values()))
     let actualPlayer = this.turnController.next().value
+    let playersInPlay = [...this.userIdUserMap.values()].map(a => a.username)
+    let objectGameStatus = {gameStatus: this.gameStatus, actualPlayer: actualPlayer, playersInPlay: playersInPlay}
     console.log(`Now it's turn of player ${actualPlayer}`)
-    this.io.emit('GAME_STATUS', this.gamestatus)
-    this.io.emit(`PLAYER_TURN`, {actualPlayer})
+    console.log(`Players in play: ${playersInPlay}`)
+    this.io.emit('GAME_STATUS', objectGameStatus)
+    // this.io.emit(`PLAYER_TURN`, {actualPlayer})
     this.io.emit('GAME_MESSAGE', `It's the turn of ${actualPlayer.username}`)
   }
 
@@ -133,7 +133,9 @@ module.exports = class Game {
 
   processPlayerChoice (player, choice) {
     let usersEliminated = this.eliminatePlayersByChoice(choice)
-    this.io.emit('PLAYERS_ELIMINATED', usersEliminated)
+    let usernameEliminated = usersEliminated.map(a => a.username)
+    this.io.emit('GAME_STATUS', {playersEliminated: usernameEliminated})
+    this.disableButtonByIndex(choice)
   }
 
   eliminatePlayersByChoice (choice) {
@@ -159,4 +161,20 @@ module.exports = class Game {
     })
     return userEliminated
   }
+
+  disableButton (btnValue) {
+    let index = this.choiceList.findIndex(el => el.id === btnValue)
+    this.choiceList[index].disabled = true
+    this.io.emit('GAME_STATUS', {choiceList: this.choiceList})
+  }
+
+  getPlayerChoiceBySocketId (socketId) {
+      let userId = this.getUserIdBySocketId(socketId)
+      return this.userIdPlayerFirstChoiceMap[userId]
+  }
+
+  getUserIdBySocketId (socketId) {
+    return Object.keys(this.playerSocketMap).find(key => this.playerSocketMap[key] === socketId)
+  }
+
 }

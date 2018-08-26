@@ -2,6 +2,7 @@
   <div>
     <div class="card-body">
       <h1><p><span class="font-weight-bold">{{ gameMessage }}</span></p></h1>
+      <h1 v-if="(gameStatus === GAME_STATUS.PLAYING)"><p><span class="font-weight-bold">Players {{ playersInPlay }} | Eliminated {{ playersEliminated}}</span></p></h1>
     </div>
     <start-game v-if="(gameStatus === GAME_STATUS.WAIT_FOR_START)" :socket="socket"></start-game>
     <choice-list v-if="(gameStatus !== GAME_STATUS.WAIT_FOR_START)" :socket="socket"></choice-list>
@@ -29,7 +30,9 @@
         return this.$store.getters.getGameMessage
       },
       user: function () { return this.$store.getters.user },
-      gameStatus: function () { return this.$store.getters.getGameStatus }
+      gameStatus: function () { return this.$store.getters.getGameStatus },
+      playersInPlay: function () { return this.$store.getters.getPlayersInPlay },
+      playersEliminated: function () {return this.$store.getters.getPlayersEliminated}
     },
     components: {
       ChoiceList,
@@ -38,26 +41,21 @@
     },
     methods: {
       initGameStatus: function (expandedGameStatus) {
-        console.log(`Game status expanded ${expandedGameStatus}`)
+        console.log(`Game status expanded ${JSON.stringify(expandedGameStatus)}`)
         this.$store.dispatch('updateStatus', expandedGameStatus)
         console.log(expandedGameStatus) // data will be 'woot'
       }
     },
     mounted () {
       let self = this
-      let username = this.$store.getters.user.username
+      let userId = this.$store.getters.user._id
       this.socket.on('GAME_STATUS', (expandedGameStatus) => {
-        console.log(`Game status expanded ${expandedGameStatus}`)
-        self.$store.dispatch('updateStatus', expandedGameStatus)
-        console.log(expandedGameStatus) // data will be 'woot'
-      })
-      this.socket.on('GAME_STARTED', (data) => {
-         self.$store.dispatch('startGame')
+        self.initGameStatus(expandedGameStatus)
       })
       this.socket.on('GAME_MESSAGE', (data) => {
         self.$store.dispatch('setGameMessage', data)
       })
-      this.socket.emit('REQUEST_GAME_STATUS', username, self.initGameStatus)
+      this.socket.emit('REQUEST_GAME_STATUS', userId, self.initGameStatus)
     }
   }
 </script>
