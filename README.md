@@ -1,9 +1,31 @@
-# Securing MEVN Stack (Vue.js 2) Web Application using Passport
+# Cantariello
 
-This source code is part of [Securing MEVN Stack (Vue.js 2) Web Application using Passport](https://www.djamware.com/post/5ac8338780aca714d19d5b9e/securing-mevn-stack-vuejs-2-web-application-using-passport)
+This source code is part of a popular game with the sole purpose of deciding _who is gonna pay the coffee_
 
 To run locally:
-* Run MongoDB server
-* Clone this repository
-* Run `npm install`
-* Run `npm start`
+- install mongodb
+```commandline
+sudo apt update
+sudo apt install -y mongodb
+```
+- install node.js and npm
+```commandline
+sudo apt install nodejs
+sudo apt install npm
+```
+Please make sure that nodejs is install at the current latest lts release (at the moment `8.12.0`)
+Now the environment is set: few more steps to go
+Install git and clone the repository
+```commandline
+sudo apt-get install git-core
+git clone https://github.com/gorgia/cantariello
+```
+go to the folder and then install the nodejs modules
+```commandline
+npm install
+```
+after some downloads you are ready to go!
+```commandline
+npm run
+```
+connect to the host via port 3000 and play!
