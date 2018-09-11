@@ -23,7 +23,6 @@
       },
       methods: {
           startGame () {
-            this.$store.dispatch('startGame')
             this.socket.emit(`START_GAME`)
           }
       },

@@ -2,10 +2,10 @@
   <div>
     <div v-if="isLoading">Loading...</div>
     <b-jumbotron fluid v-if="!isLoading">
-      <b-row v-if="!isLoading" v-model="btnList" v-for="i in Math.ceil(btnList.length / 3)" :key = i>
-        <b-button  v-if="!isLoading" v-for="btn in btnList.slice((i - 1) * 3, i * 3)" :key="btn.value" :class="[btn.disabled ? (btn.value === getPlayerChoice) ? 'disabled userIdPlayerFirstChoiceMap bg-success' : 'disabled' : '']"
-                  class="btn-outline-primary col" :ref="btn.value" @click="select(btn.value)">
-          {{ btn.text }}
+      <b-row v-if="!isLoading" v-model="btnList" v-for="i in Math.ceil(btnList.length / 3)">
+        <b-button  v-if="!isLoading" v-for="btn in btnList.slice((i - 1) * 3, i * 3)" :key="btn.id" :class="[btn.disabled ? (btn.id === getPlayerChoice) ? 'disabled userIdPlayerFirstChoiceMap bg-success' : 'disabled' : '']"
+                  class="btn-outline-primary col" :ref="btn.id" @click="select(btn.id)">
+          {{ btn.title }}
         </b-button>
       </b-row>
     </b-jumbotron>
@@ -28,6 +28,9 @@
 </style>
 
 <script>
+const CONFIG = require('../config')
+const GAME_STATUS = CONFIG.default.GAME_STATUS
+
 export default {
   name: 'ChoiceList',
   props: ['socket'],
@@ -36,16 +39,18 @@ export default {
       selectedBtn: null
     }
   },
-  beforeMount: function () {
-    this.$store.dispatch('fetchData')
-  },
   computed: {
     isLoading: function () {
-      return this.$store.getters.getIsChoiceListLoading
+      return !(typeof this.$store.getters.getChoiceList !== 'undefined' && this.$store.getters.getChoiceList.length > 0)
     },
     btnList: {
       get: function () {
-        return this.$store.getters.getChoiceList
+        let choiceList = this.$store.getters.getChoiceList
+        let playerChoice = this.$store.getters.getPlayerChoice
+        if (playerChoice) {
+            this.$store.dispatch('disableButtonByValue', playerChoice)
+        }
+        return choiceList
       }
     },
     getPlayerChoice: function () {
@@ -60,13 +65,6 @@ export default {
     }
   },
   mounted () {
-    let self = this
-    this.socket.on('CHOICE_LIST', (data) => {
-      console.log('CHOICE_LIST received ' + data)
-    })
-    this.socket.on('PLAYER_TURN', (data) => {
-      this.playerTurn = data
-    })
   },
   methods: {
     select: function (buttonid) {
@@ -102,9 +100,9 @@ export default {
       })
     },
     sendChoice: function () {
-      if (!this.$store.getters.getChoiceList.find(x => x.state === 'playerChoice')) {
-        this.firstChoiceProcessing()
-      }
+      console.log(`sendChoice:${this.selectedBtn}`)
+      if (this.$store.getters.getGameStatus === GAME_STATUS.WAIT_FOR_PLAYERCHOICE) { this.firstChoiceProcessing() }
+      else if (this.$store.getters.getGameStatus === GAME_STATUS.PLAYING) { this.turnChoiceProcessing() }
     },
     firstChoiceProcessing: function () {
       console.log('this is playerChoice')
@@ -113,11 +111,11 @@ export default {
       let selectedBtnValue = this.selectedBtn
       console.log(`selectedBtnValue: ${selectedBtnValue}`)
       let payload = { selectedBtn: selectedBtnValue, newstate }
-      // this.$store.dispatch('changeChoiceListElementState', payload)
+
       for (let index in this.btnList) {
-        if (this.btnList[index].value === selectedBtnValue) {
+        if (this.btnList[index].id === selectedBtnValue) {
           console.log(`element found`)
-          this.$store.dispatch('disableButton', index)
+          this.$store.dispatch('disableButtonByIndex', index)
         }
       }
     },
@@ -126,9 +124,13 @@ export default {
       for (let index in this.btnList) {
         if (this.btnList[index].value === playerChoiceValue) {
           console.log(`element found`)
-          this.$store.dispatch('disableButton', index)
+          this.$store.dispatch('disableButtonByIndex', index)
         }
       }
+    },
+    turnChoiceProcessing: function () {
+      let playerChoiceValue = this.$store.getters.getPlayerChoice
+      this.socket.emit('PLAYER_TURN_CHOICE', playerChoiceValue)
     }
   }
 }
