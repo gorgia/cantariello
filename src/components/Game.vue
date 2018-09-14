@@ -41,9 +41,8 @@
     },
     methods: {
       initGameStatus: function (expandedGameStatus) {
-        console.log(`Game status expanded ${JSON.stringify(expandedGameStatus)}`)
+        console.log(`InitGameStatus: Game status expanded =\n${JSON.stringify(expandedGameStatus)}`)
         this.$store.dispatch('updateStatus', expandedGameStatus)
-        console.log(expandedGameStatus) // data will be 'woot'
       }
     },
     mounted () {
@@ -55,7 +54,7 @@
       this.socket.on('GAME_MESSAGE', (data) => {
         self.$store.dispatch('setGameMessage', data)
       })
-      this.socket.emit('REQUEST_GAME_STATUS', userId, self.initGameStatus)
+      this.socket.emit('REQUEST_GAME_STATUS', userId, function (data) { self.initGameStatus(data) })
     }
   }
 </script>

@@ -100,7 +100,8 @@ const moduleChoiceList = {
     playerTurn: null,
     gameStatus: GAME_STATUS.WAIT_FOR_START,
     playersInPlay: [],
-    playersEliminated: []
+    playersEliminated: [],
+    sendButtonEnabled: true
   },
   mutations: {
     setChoiceList (state, list) {
@@ -161,7 +162,7 @@ const moduleChoiceList = {
     disableButtonByIndex ({commit}, buttonIndex) {
       commit('disableButtonByIndex', buttonIndex)
     },
-    disableButtonByValue({commit}, buttonValue) {
+    disableButtonByValue ({commit}, buttonValue) {
       let choiceList = this.getters.getChoiceList
       let index = choiceList.findIndex(el => el.id === buttonValue)
       this.dispatch('disableButtonByIndex', index)
@@ -176,28 +177,17 @@ const moduleChoiceList = {
       commit('setGameMessage', message)
     },
     setPlayerTurn ({commit}, playerTurn) { commit('setPlayerTurn', playerTurn) },
-    updateStatus ({commit}, gameStatusContainer) {
+    updateStatus ({commit, rootState}, gameStatusContainer) {
       if (gameStatusContainer.gameStatus) commit('setGameStatus', gameStatusContainer.gameStatus)
       if (gameStatusContainer.gameMessage) commit('setGameMessage', gameStatusContainer.gameMessage)
-      switch (gameStatusContainer.gameStatus) {
-        case GAME_STATUS.WAIT_FOR_START:
-          commit('setPlayerChoice', null)
-          commit('setGameMessage', 'Wait for all players to reach this page the push the button')
-          break
-        case GAME_STATUS.WAIT_FOR_PLAYERCHOICE:
-          commit('setChoiceList', gameStatusContainer.choiceList)
-          break
-        case GAME_STATUS.PLAYING:
-          if (gameStatusContainer.playerChoice) this.dispatch('setPlayerChoice', gameStatusContainer.playerChoice)
-          if (gameStatusContainer.choiceList) {
-            commit('setChoiceList', gameStatusContainer.choiceList)
-            this.dispatch('setPlayerChoice', this.getters.getPlayerChoice)
-          }
-          if (gameStatusContainer.playerTurn) commit('setPlayerTurn', gameStatusContainer.playerTurn)
-          if (gameStatusContainer.playersInPlay) commit('setPlayersInPlay', gameStatusContainer.playersInPlay)
-          if (gameStatusContainer.playersEliminated) commit('setPlayersEliminated', gameStatusContainer.playersEliminated)
-          break
+      if (gameStatusContainer.choiceList) {
+        commit('setChoiceList', gameStatusContainer.choiceList)
+        this.dispatch('setPlayerChoice', this.getters.getPlayerChoice)
       }
+      if (gameStatusContainer.playersInPlay) commit('setPlayersInPlay', gameStatusContainer.playersInPlay)
+      if (gameStatusContainer.playersEliminated) commit('setPlayersEliminated', gameStatusContainer.playersEliminated)
+      if (gameStatusContainer.playerTurn) commit('setPlayerTurn', gameStatusContainer.playerTurn)
+      if (gameStatusContainer.playerChoice) commit('setPlayerChoice', gameStatusContainer.playerChoice)
     }
   }
 }

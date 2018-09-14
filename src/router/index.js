@@ -6,6 +6,7 @@ import Profile from '@/components/Profile'
 import Choice from '@/components/Choice'
 import Game from '@/components/Game'
 import Home from '@/components/Home'
+import Leaderboard from '@/components/Leaderboard'
 
 Vue.use(Router)
 
@@ -40,6 +41,11 @@ export default new Router({
       path: '/game',
       name: 'Game',
       component: Game
+    },
+    {
+      path: '/leaderboard',
+      name: 'Leaderboard',
+      component: Leaderboard
     }
 
   ]

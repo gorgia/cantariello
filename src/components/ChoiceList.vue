@@ -3,14 +3,14 @@
     <div v-if="isLoading">Loading...</div>
     <b-jumbotron fluid v-if="!isLoading">
       <b-row v-if="!isLoading" v-model="btnList" v-for="i in Math.ceil(btnList.length / 3)">
-        <b-button  v-if="!isLoading" v-for="btn in btnList.slice((i - 1) * 3, i * 3)" :key="btn.id" :class="[btn.disabled ? (btn.id === getPlayerChoice) ? 'disabled userIdPlayerFirstChoiceMap bg-success' : 'disabled' : '']"
+        <b-button  v-if="!isLoading" v-for="btn in btnList.slice((i - 1) * 3, i * 3)" :key="btn.id" :disabled=isButtonDisabled(btn) :class="(btn.id === playerChoice)?  'bg-success' : ''"
                   class="btn-outline-primary col" :ref="btn.id" @click="select(btn.id)">
           {{ btn.title }}
         </b-button>
       </b-row>
     </b-jumbotron>
     <div>
-      <b-button class="btn-success btn-lg" :class="isMyTurn ? '': 'disabled'" @click="sendChoice()">Send Choice</b-button>
+      <b-button class="btn-success btn-lg" :disabled="!isMyTurn" @click="sendChoice()">Send Choice</b-button>
     </div>
     <div>
       <v-dialog/>
@@ -34,7 +34,7 @@ const GAME_STATUS = CONFIG.default.GAME_STATUS
 export default {
   name: 'ChoiceList',
   props: ['socket'],
-  data () {
+  data: function () {
     return {
       selectedBtn: null
     }
@@ -42,6 +42,9 @@ export default {
   computed: {
     isLoading: function () {
       return !(typeof this.$store.getters.getChoiceList !== 'undefined' && this.$store.getters.getChoiceList.length > 0)
+    },
+    playerChoice: function () {
+      return this.$store.getters.getPlayerChoice
     },
     btnList: {
       get: function () {
@@ -53,15 +56,12 @@ export default {
         return choiceList
       }
     },
-    getPlayerChoice: function () {
-      return this.$store.getters.getPlayerChoice
-    },
     getPlayerWait: function () {
       return false// return this.$store.getters.getPlayerWait
     },
     isMyTurn: function () {
-      if (!this.playerTurn) return true
-      return this.$store.getters.user._id === this.playerTurn._id
+      if (this.$store.getters.getPlayerTurn) return this.$store.getters.user._id === this.$store.getters.getPlayerTurn._id
+      return true
     }
   },
   mounted () {
@@ -82,7 +82,7 @@ export default {
         buttons: [
           {
             title: 'Confirm', // Button title
-            default: true, // Will be triggered by default if 'Enter' pressed.
+            default: false, // Will be triggered by default if 'Enter' pressed.
             handler: () => {
               console.log('button confirm pressed')
               let playerChoice = this.selectedBtn
@@ -99,25 +99,13 @@ export default {
         ]
       })
     },
+    firstChoiceProcessing: function () {
+      this.showModal('first-choice-dialog')
+    },
     sendChoice: function () {
       console.log(`sendChoice:${this.selectedBtn}`)
       if (this.$store.getters.getGameStatus === GAME_STATUS.WAIT_FOR_PLAYERCHOICE) { this.firstChoiceProcessing() }
       else if (this.$store.getters.getGameStatus === GAME_STATUS.PLAYING) { this.turnChoiceProcessing() }
-    },
-    firstChoiceProcessing: function () {
-      console.log('this is playerChoice')
-      this.showModal('first-choice-dialog')
-      let newstate = 'playerChoice'
-      let selectedBtnValue = this.selectedBtn
-      console.log(`selectedBtnValue: ${selectedBtnValue}`)
-      let payload = { selectedBtn: selectedBtnValue, newstate }
-
-      for (let index in this.btnList) {
-        if (this.btnList[index].id === selectedBtnValue) {
-          console.log(`element found`)
-          this.$store.dispatch('disableButtonByIndex', index)
-        }
-      }
     },
     modifyPlayerFirstChoiceButton: function () {
       let playerChoiceValue = this.$store.getters.getPlayerChoice
@@ -128,9 +116,18 @@ export default {
         }
       }
     },
+    isButtonDisabled: function (btn) {
+      if (btn.disabled) return true
+      if (btn.id === this.playerChoice) return true
+      return false
+    },
+    displayFirstChoiceClass: function (btn) {
+      if (btn.id === this.playerChoice) return
+    },
     turnChoiceProcessing: function () {
-      let playerChoiceValue = this.$store.getters.getPlayerChoice
-      this.socket.emit('PLAYER_TURN_CHOICE', playerChoiceValue)
+      let playerChoiceValue = this.selectedBtn
+      let playerId = this.$store.getters.user._id
+      this.socket.emit('PLAYER_TURN_CHOICE', {player: playerId, choice: playerChoiceValue})
     }
   }
 }

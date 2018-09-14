@@ -4,8 +4,16 @@ const router = express.Router()
 const cors = require('cors')
 const randomListGenerator = require('../randomListGenerator')
 const myCache = require('../cache').myCache
+const User = require('../../../models/User')
 
 router.all('*', cors())
+
+router.get('/users', function (req, res) {
+  User.find({}, function (err, users) {
+    if (err) res.status(500).send('Something broke!')
+    res.json({users: users})
+  }).sort({'score': 'desc'})
+})
 
 router.get('/randomlist', function (req, res) {
     if (myCache.get('choiceList')) res.json(myCache.get('choiceList'))

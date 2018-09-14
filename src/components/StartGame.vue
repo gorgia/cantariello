@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <h1>Number of players connected: {{numberOfPlayersConnected}}</h1>
+      <h1>Number of players connected: {{numberOfPlayersConnected}} | Number of clients connected {{numberOfClientsConnected}} </h1>
     </div>
     <div>
       <b-button class="btn-success btn-lg" @click="startGame()">Start Game</b-button>
@@ -15,7 +15,8 @@
         props: ['socket'],
       data () {
         return {
-          numberOfPlayersConnected: 0
+          numberOfPlayersConnected: 0,
+          numberOfClientsConnected: 0
         }
       },
       computed: {
@@ -30,8 +31,9 @@
         const self = this
         this.socket.emit('GET_NUMBER_OF_CLIENTS_CONNECTED')
         this.socket.on('NUMBER_OF_CLIENTS_CONNECTED', (data) => {
-          console.log(`NUMBER_OF_CLIENTS_CONNECTED received ${data}`)
-          self.numberOfPlayersConnected = data
+          console.log(`NUMBER_OF_CLIENTS_CONNECTED received ${JSON.stringify(data)}`)
+          self.numberOfPlayersConnected = data.numberOfPlayers ? data.numberOfPlayers : 'unknown'
+          self.numberOfClientsConnected = data.numberOfClients
         })
       }
     }
